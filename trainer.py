@@ -55,11 +55,11 @@ class FasterRCNNTrainer(nn.Module):
 
         self.optimizer = self.faster_rcnn.get_optimizer()
         # visdom wrapper
-        self.vis = Visualizer(env=opt.env)
+        #self.vis = Visualizer(env=opt.env)
 
         # indicators for training status
         self.rpn_cm = ConfusionMeter(2)
-        self.roi_cm = ConfusionMeter(21)
+        self.roi_cm = ConfusionMeter(3)
         self.meters = {k: AverageValueMeter() for k in LossTuple._fields}  # average loss
 
     def forward(self, imgs, bboxes, labels, scale):
@@ -87,6 +87,7 @@ class FasterRCNNTrainer(nn.Module):
         Returns:
             namedtuple of 5 losses
         """
+        
         n = bboxes.shape[0]
         if n != 1:
             raise ValueError('Currently only batch size 1 is supported.')
@@ -156,7 +157,7 @@ class FasterRCNNTrainer(nn.Module):
             self.roi_sigma)
 
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
-
+        
         self.roi_cm.add(at.totensor(roi_score, False), gt_roi_label.data.long())
 
         losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss]
@@ -189,7 +190,7 @@ class FasterRCNNTrainer(nn.Module):
         save_dict['model'] = self.faster_rcnn.state_dict()
         save_dict['config'] = opt._state_dict()
         save_dict['other_info'] = kwargs
-        save_dict['vis_info'] = self.vis.state_dict()
+        #save_dict['vis_info'] = self.vis.state_dict()
 
         if save_optimizer:
             save_dict['optimizer'] = self.optimizer.state_dict()
@@ -205,20 +206,29 @@ class FasterRCNNTrainer(nn.Module):
             os.makedirs(save_dir)
 
         t.save(save_dict, save_path)
-        self.vis.save([self.vis.env])
+        #self.vis.save([self.vis.env])
         return save_path
 
     def load(self, path, load_optimizer=True, parse_opt=False, ):
         state_dict = t.load(path)
         if 'model' in state_dict:
-            self.faster_rcnn.load_state_dict(state_dict['model'])
+            try:
+                self.faster_rcnn.load_state_dict(state_dict['model'])
+            except RuntimeError as e:
+                print('Ignoring "' + str(e) + '"')
         else:  # legacy way, for backward compatibility
-            self.faster_rcnn.load_state_dict(state_dict)
+            try:
+                self.faster_rcnn.load_state_dict(state_dict)
+            except RuntimeError as e:
+                print('Ignoring "' + str(e) + '"')
             return self
         if parse_opt:
             opt._parse(state_dict['config'])
         if 'optimizer' in state_dict and load_optimizer:
-            self.optimizer.load_state_dict(state_dict['optimizer'])
+            try:
+                self.optimizer.load_state_dict(state_dict['optimizer'])
+            except RuntimeError as e:
+                print('Ignoring "' + str(e) + '"')
         return self
 
     def update_meters(self, losses):

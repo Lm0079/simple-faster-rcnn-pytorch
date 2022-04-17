@@ -15,7 +15,10 @@ def decom_vgg16():
     if opt.caffe_pretrain:
         model = vgg16(pretrained=False)
         if not opt.load_path:
-            model.load_state_dict(t.load(opt.caffe_pretrain_path))
+            try:
+                model.load_state_dict(t.load(opt.caffe_pretrain_path))
+            except RuntimeError as e:
+                print('Ignoring "' + str(e) + '"')
     else:
         model = vgg16(not opt.load_path)
 
@@ -56,7 +59,7 @@ class FasterRCNNVGG16(FasterRCNN):
     feat_stride = 16  # downsample 16x for output of conv5 in vgg16
 
     def __init__(self,
-                 n_fg_class=20,
+                 n_fg_class=2,
                  ratios=[0.5, 1, 2],
                  anchor_scales=[8, 16, 32]
                  ):
