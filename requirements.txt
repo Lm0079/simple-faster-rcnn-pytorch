@@ -3,8 +3,8 @@ torchvision
 scikit-image
 tqdm
 fire
-pprint
+opencv-python==4.5.5.64
 matplotlib
+torchnet==0.0.4
 ipdb
 cython
-git+https://github.com/pytorch/tnt.git@master

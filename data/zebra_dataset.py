@@ -118,19 +118,15 @@ class ZebraBboxDataset:
 
 			if img["filepath"] is id:
 
-
-				
 				for bb in img["bboxes"]:
 
 					bbox.append([bb["y1"],bb["x1"],bb["y2"],bb["x2"]])
 					difficult.append(0)
 					name = bb["class"]
-					##TODO DEAL WITH THIS
-					label.append(int(name))
-					#label.append(VOC_BBOX_LABEL_NAMES.index(name))
+					label.append(int(name)-1)
 		bbox = np.stack(bbox).astype(np.float32)
 		label = np.stack(label).astype(np.int32)
-		# When `use_difficult==False`, all elements in `difficult` are False.
+		
 		difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
 
 		# Load a image

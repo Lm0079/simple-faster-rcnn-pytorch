@@ -1,2 +1,4 @@
-.pyc
+*.pyc
 /output/
+/output_2/
+/cropped/
