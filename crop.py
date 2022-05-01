@@ -48,7 +48,6 @@ for model_name in model_names :
 					if not cropped_img.any() : 
 						pass
 					else:
-						#print(cropped_img)
 						cv2.imwrite(output_f,cropped_img)
 
 					
